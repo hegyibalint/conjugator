@@ -10,7 +10,6 @@ export async function* processor(
 ): AsyncGenerator<AnkiEntry> {
   const rl = readline.createInterface(fs.createReadStream(file));
 
-  let entries: AnkiEntry[] = [];
   for await (const line of rl) {
     console.log(`Processing ${splitAndClean(line)[0]}`);
     yield processor(line);

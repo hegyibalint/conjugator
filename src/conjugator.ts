@@ -5,20 +5,12 @@ import chalk from "chalk";
 const CONJUGATION_ENDPOINT_STUB = "https://conjugator.reverso.net/conjugation";
 const CONJUGATION_CACHE_DIR = `.cache/conjugations`;
 
-export type RegularConjugation = {
-  kind: "regular";
+export type Conjugation = {
+  kind: "regular" | "irregular";
   person: string;
   root: string;
   postfix: string;
 };
-
-export type IrregularConjugation = {
-  kind: "irregular";
-  person: string;
-  verb: string;
-};
-
-export type Conjugation = RegularConjugation | IrregularConjugation;
 
 export interface Tense {
   s1: Conjugation;
@@ -30,33 +22,35 @@ export interface Tense {
 }
 
 function extractConjugation(li: HTMLLIElement): Conjugation {
-  const person_element = li.querySelector("i.graytxt");
-
-  if (person_element === null) {
+  const person = li.querySelector("i.graytxt")?.innerHTML;
+  if (person === undefined) {
     throw new Error("Conjugation person cannot be null");
   }
 
-  const irregular_term = li.querySelector("i.verbtxt-term-irr");
-  if (irregular_term !== null) {
+  // Roots
+  const root = li.querySelector("i.verbtxt")?.innerHTML || "";
+  const regular_postfix = li.querySelector("i.verbtxt")?.innerHTML;
+  const irregular_postfix = li.querySelector("i.verbtxt-term-irr")?.innerHTML;
+
+  if (!irregular_postfix) {
+    if (!regular_postfix) {
+      throw Error(`No regular postfix found for conjugation '${person}'`);
+    } else {
+      return {
+        kind: "regular",
+        person: person,
+        root: root,
+        postfix: regular_postfix,
+      };
+    }
+  } else {
     return {
       kind: "irregular",
-      person: person_element.innerHTML,
-      verb: irregular_term.innerHTML,
+      person: person,
+      root: root,
+      postfix: irregular_postfix,
     };
   }
-
-  const regular_term_root = li.querySelector("i.verbtxt");
-  const regular_term_postfix = li.querySelector("i.verbtxt-term");
-  if (regular_term_root === null || regular_term_postfix === null) {
-    throw new Error("Cannot find conjugated verb");
-  }
-
-  return {
-    kind: "regular",
-    person: person_element.innerHTML,
-    root: regular_term_root.innerHTML,
-    postfix: regular_term_postfix.innerHTML,
-  };
 }
 
 function extractTense(box: HTMLDivElement): Tense {
@@ -75,7 +69,7 @@ function extractTense(box: HTMLDivElement): Tense {
   };
 }
 
-export async function conjugate(word: string, tense: string) {
+export async function conjugate(word: string, tense: string): Promise<Tense> {
   const conjugation_cache_file = `${CONJUGATION_CACHE_DIR}/${word}.json`;
   if (fs.existsSync(conjugation_cache_file)) {
     console.log(chalk.green(`  Conjugation: cached`));

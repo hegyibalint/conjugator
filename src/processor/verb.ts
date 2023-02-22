@@ -1,26 +1,20 @@
-import fs from "fs";
-import readline from "readline";
 import { capitalize, processor, splitAndClean } from ".";
 import { conjugate, Conjugation, Tense } from "../conjugator";
 import { AnkiEntry } from "../main";
 import { synthehise as synthesize } from "../tts";
 
 function formatAsPlaintext(conjugation: Conjugation) {
-  switch (conjugation.kind) {
-    case "regular":
-      return conjugation.root + conjugation.postfix;
-    case "irregular":
-      return conjugation.verb;
-  }
+  return conjugation.root + conjugation.postfix;
 }
 
-function formatAsHTML(conjugation: Conjugation) {
-  switch (conjugation.kind) {
-    case "regular":
-      return `${conjugation.root}<span style="color: green;">${conjugation.postfix}</span>`;
-    case "irregular":
-      return `<span style="color: red;">${conjugation.verb}</span>`;
-  }
+function formatAsHTML(conjugation: Conjugation): string {
+  const postfixColor = () => (conjugation.kind === "regular" ? "green" : "red");
+  return [
+    conjugation.root,
+    `<span style="color: ${postfixColor()};">`,
+    conjugation.postfix,
+    "</span>",
+  ].join("");
 }
 
 async function createWordTTSSample(word: string): Promise<string> {
@@ -60,14 +54,14 @@ function createConjugationDescription(tense: Tense): string {
 
 async function processVerb(line: string): Promise<AnkiEntry> {
   const [source_word, target_word] = splitAndClean(line);
-  let conjugation = await conjugate(source_word, "Presente");
+  const tense = await conjugate(source_word, "Presente");
 
   return {
     source_word: source_word,
     target_word: target_word,
-    extra_content: createConjugationDescription(conjugation),
+    extra_content: createConjugationDescription(tense),
     tts_side_a: await createWordTTSSample(source_word),
-    tts_side_b: await createConjugationTTSSample(source_word, conjugation),
+    tts_side_b: await createConjugationTTSSample(source_word, tense),
   };
 }
 
