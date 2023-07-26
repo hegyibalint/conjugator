@@ -29,7 +29,7 @@ function extractConjugation(li: HTMLLIElement): Conjugation {
 
   // Roots
   const root = li.querySelector("i.verbtxt")?.innerHTML || "";
-  const regular_postfix = li.querySelector("i.verbtxt")?.innerHTML;
+  const regular_postfix = li.querySelector("i.verbtxt-term")?.innerHTML;
   const irregular_postfix = li.querySelector("i.verbtxt-term-irr")?.innerHTML;
 
   if (!irregular_postfix) {
@@ -53,6 +53,18 @@ function extractConjugation(li: HTMLLIElement): Conjugation {
   }
 }
 
+function findConjugation(
+  person: string,
+  conjugations: Conjugation[]
+): Conjugation {
+  const conjugation = conjugations.find((conj) => conj.person === person);
+  if (!conjugation) {
+    throw new Error(`Cannot find conjugation '${person}'`);
+  } else {
+    return conjugation;
+  }
+}
+
 function extractTense(box: HTMLDivElement): Tense {
   const conjugation_elements: HTMLLIElement[] = Array.from(
     box.querySelectorAll("ul.wrap-verbs-listing > li")
@@ -60,12 +72,12 @@ function extractTense(box: HTMLDivElement): Tense {
   const conjugations = conjugation_elements.map((li) => extractConjugation(li));
 
   return {
-    s1: conjugations.find((c) => c.person === "eu")!,
-    s2: conjugations.find((c) => c.person === "tu")!,
-    s3: conjugations.find((c) => c.person === "ele/ela/você")!,
-    p1: conjugations.find((c) => c.person === "nós")!,
-    p2: conjugations.find((c) => c.person === "vós")!,
-    p3: conjugations.find((c) => c.person === "eles/elas/vocês")!,
+    s1: findConjugation("eu", conjugations),
+    s2: findConjugation("tu", conjugations),
+    s3: findConjugation("ele/ela/você", conjugations),
+    p1: findConjugation("nós", conjugations),
+    p2: findConjugation("vós", conjugations),
+    p3: findConjugation("eles/elas/vocês", conjugations),
   };
 }
 

@@ -1,7 +1,7 @@
-import { capitalize, processor, splitAndClean } from ".";
+import { capitalize, createWordID, processor, splitAndClean } from ".";
 import { conjugate, Conjugation, Tense } from "../conjugator";
 import { AnkiEntry } from "../main";
-import { synthehise as synthesize } from "../tts";
+import { synthesise as synthesize } from "../tts";
 
 function formatAsPlaintext(conjugation: Conjugation) {
   return conjugation.root + conjugation.postfix;
@@ -18,7 +18,7 @@ function formatAsHTML(conjugation: Conjugation): string {
 }
 
 async function createWordTTSSample(word: string): Promise<string> {
-  const word_id = `${word.replace(" ", "-")}+word`;
+  const word_id = createWordID(word, "word");
   return synthesize(word_id, `${capitalize(word)}.`);
 }
 
@@ -26,7 +26,7 @@ async function createConjugationTTSSample(
   word: string,
   tense: Tense
 ): Promise<string> {
-  const word_id = `${word.replace(" ", "-")}+conj`;
+  const word_id = createWordID(word, "conj");
 
   return synthesize(
     word_id,

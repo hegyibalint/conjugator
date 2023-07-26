@@ -12,7 +12,7 @@ const TTS_CACHE_DIR = `.cache/tts`;
 
 const client = new PollyClient({});
 
-export async function synthehise(
+export async function synthesise(
   word_id: string,
   text: string
 ): Promise<string> {
@@ -23,8 +23,8 @@ export async function synthehise(
     const input: SynthesizeSpeechCommandInput = {
       Text: text,
       LanguageCode: "pt-PT",
-      VoiceId: "Cristiano",
-      Engine: "standard",
+      VoiceId: "Ines",
+      Engine: "neural",
       OutputFormat: "mp3",
     };
     const command = new SynthesizeSpeechCommand(input);
