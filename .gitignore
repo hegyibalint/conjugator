@@ -1,9 +1,0 @@
-# Application-specific directories
-.cache/
-words/
-deck.csv
-
-# TS-specific directories
-node_modules/
-build/
-package-lock.json
