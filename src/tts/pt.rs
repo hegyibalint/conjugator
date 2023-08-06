@@ -1,4 +1,3 @@
-use std::io::Read;
 use std::path::PathBuf;
 
 use aws_sdk_polly::Client;
@@ -6,19 +5,21 @@ use aws_sdk_polly::types::{Engine, OutputFormat, VoiceId};
 use tokio::fs::File;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 
+use crate::cache::Cache;
 use crate::lang::pt::PtVerbConjugations;
 
 pub struct PtTTSProcessor<'a> {
-    // Polly client
     polly_client: &'a Client,
+    cache: &'a Cache,
     sample_dir: PathBuf,
 }
 
 impl<'a> PtTTSProcessor<'a> {
-    pub fn new(sample_dir: PathBuf, polly_client: &'a Client) -> Self {
+    pub fn new(sample_dir: PathBuf, polly_client: &'a Client, cache: &'a Cache) -> Self {
         Self {
             sample_dir,
             polly_client,
+            cache
         }
     }
 

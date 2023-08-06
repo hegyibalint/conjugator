@@ -53,7 +53,7 @@ impl From<Collection> for AnkiHandler {
 }
 
 impl AnkiHandler {
-    pub fn new(media_dir: PathBuf, endpoint: Url) -> Self {
+    pub fn new(media_dir: PathBuf, _endpoint: Url) -> Self {
         let collection = CollectionBuilder::new("anki.db")
             .set_media_paths(media_dir, PathBuf::from("media.db"))
             .build()

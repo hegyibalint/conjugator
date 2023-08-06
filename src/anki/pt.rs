@@ -1,18 +1,20 @@
 use anki::notes::NoteId;
-use anki::services::{CardsService, NotesService};
+use anki::services::DecksService;
 
 use crate::anki::AnkiHandler;
 use crate::lang::pt::{PtVerbConjugations, PtVocabularyVerb};
 
 impl AnkiHandler {
 
-    pub(crate) fn has_verb(&mut self, p0: &PtVocabularyVerb) -> bool {
-        let vec = self.collection.update_note(&p0.pt).unwrap();
+    pub fn has_verb(&mut self, verb: &PtVocabularyVerb) -> bool {
+        let vec = self.collection.notes
 
         match vec.len() {
             0 => false,
             1 => true,
-            _ => panic!("More than one note found for {}", p0.pt),
+            _ => {
+                panic!("More than one note with the same vocabulary: {}");
+            }
         }
     }
 

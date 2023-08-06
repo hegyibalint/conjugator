@@ -1,26 +1,30 @@
 use std::collections::HashMap;
 use std::fmt::{Display, Formatter};
+use std::fs;
+use std::path::PathBuf;
 
 use scraper::{ElementRef, Selector};
+use serde::{Deserialize, Serialize};
+use crate::cache::Cache;
 
 // ============================================================================
 // VERBS
 // ============================================================================
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PtVocabularyVerb {
     pub en: String,
     pub pt: String,
     pub comments: Option<String>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum PtVerbSuffix {
     Regular(String),
     Irregular(String),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PtVerbConjugation {
     pub root: Option<String>,
     pub suffix: PtVerbSuffix,
@@ -40,7 +44,7 @@ impl Display for PtVerbConjugation {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum PtPersonalPronoun {
     S1,
     S2,
@@ -51,7 +55,7 @@ pub enum PtPersonalPronoun {
 }
 
 impl Display for PtPersonalPronoun {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let person = match self {
             PtPersonalPronoun::S1 => "Eu",
             PtPersonalPronoun::S2 => "Tu",
@@ -64,7 +68,7 @@ impl Display for PtPersonalPronoun {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PtVerbConjugations {
     pub vocabulary: PtVocabularyVerb,
     pub conjugations: HashMap<PtPersonalPronoun, PtVerbConjugation>,
@@ -164,7 +168,11 @@ fn process_document(vocabulary_verb: &PtVocabularyVerb, document: &str) -> PtVer
     panic!("Present tense was not found!");
 }
 
-pub async fn conjugate(verb: &PtVocabularyVerb) -> PtVerbConjugations {
+pub async fn conjugate(verb: &PtVocabularyVerb, cache_dir: PathBuf) -> PtVerbConjugations {
+    if let Ok(entry) = fs::read(cache_dir.join("pt").join("conjugations").join(&verb.pt)) {
+        return serde_json::from_slice(&entry).unwrap();
+    }
+
     let url = &format!("{}{}{}", CONJUGATION_ENDPOINT_STUB, verb.pt, ".html");
 
     let html = reqwest::get(url)
@@ -174,7 +182,16 @@ pub async fn conjugate(verb: &PtVocabularyVerb) -> PtVerbConjugations {
         .await
         .unwrap();
 
-    process_document(verb, html.as_str())
+    let conjugations = process_document(verb, html.as_str());
+
+    // Serialize conjugations into bytes
+    cache.store(
+        &verb.pt,
+        "conjugations",
+        serde_json::to_vec(&conjugations).unwrap()
+    );
+
+    conjugations
 }
 
 #[cfg(test)]
